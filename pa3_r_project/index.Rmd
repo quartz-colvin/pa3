@@ -1,0 +1,109 @@
+---
+title: "index2"
+output: html_document
+---
+
+---
+title: "index"
+author: "Quartz Colvin"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Setup
+
+First, load the data you want to work with.
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+library("tidyverse")
+library("ds4ling")
+
+data(package = "worldlanguages")
+
+```
+
+This is the data set I'll work with
+
+```{r}
+#| label: master_dataset
+
+dataset <- worldlanguages::n_languages_by_country
+
+```
+
+## Tidy the data set
+
+This one is already tidy and organized!
+
+```{r}
+#| label: tidy_dataset
+#| message: false
+#| warning: false
+
+knitr::kable(dataset,
+  caption = "Language data by country.") 
+  
+```
+
+
+## Analyse the Data
+
+Next, calculate descriptive statistics of your choice. Mean and median are already calculated for number of speakers. 
+
+```{r}
+#| label: variance
+#| message: false
+#| warning: false
+
+# calculate variance 
+knitr::kable(dataset |>
+               select(nol_established, nol_immigrant, nol_total, nos_total) |>
+               var(),
+  caption = "Variance.") 
+
+```
+
+Then, select two continuous variables and fit a model to the data (bivariate regression). 
+
+```{r}
+#| label: model
+
+mod <- lm(formula = nol_total ~ nol_immigrant, data = dataset)
+
+summary(mod)
+
+```
+
+Generate a plot that includes a regression line.
+
+```{r}
+#| label: plot
+#| message: false
+
+dataset |>
+  ggplot() + 
+  geom_point(mapping = aes(x = nol_total, y = nol_immigrant)) +
+      geom_smooth(method='lm', aes(x = nol_total, y = nol_immigrant), se = FALSE) +
+  labs(x = 'Total languages', y = 'Immigrant languages') +
+  labs(title = "Correlation between total number of languages and number of immigrant languages per country.")
+
+
+```
+
+
+## Observations 
+
+### Write up some general observations of the model and plot. 
+
+It seems that as the number of total languages in a country goes up, the number of immigrant languages also goes up (the causation is likely the other way around). On average it isn't a strong correlation. 
+
+Some countries do have a strong correlation between these two axes, but the average country (whatever that is), doesn't. 
+
+I thought the regression line would be much steeper, but I guess there is less of a correlation than I thought! 
+
+
+

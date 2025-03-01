@@ -1,0 +1,211 @@
+---
+title: "index"
+author: "Quartz Colvin"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Setup
+
+First, load the data you want to work with.
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+library("tidyverse")
+library("ds4ling")
+
+data(package = "worldlanguages")
+
+```
+
+This is the data set I'll work with
+
+```{r}
+#| label: master_dataset
+
+dataset <- worldlanguages::extinct_languages
+```
+
+## Tidy the data set
+
+Second, I'm tidying the dataset and arranging it by century of extinction starting with the most recent.
+
+```{r}
+#| label: tidy_dataset
+#| message: false
+#| warning: false
+
+# remove every century except 21st century 
+
+knitr::kable(
+  dataset |>
+    separate(
+      col = date,
+      into = c("day", "month"),
+      sep = " "
+    ) |> 
+    separate(
+      col = century,
+      into = c("century", "BC"),
+      sep = " "
+    ) |>
+    mutate(BC = if_else(
+      condition = BC == "BC",
+      true = "BC",
+      false = "NA"
+    )) |>
+    select(language, century, BC, language_family, region) |>
+    group_by(century, region), 
+  caption = "Language data by century of extinction."
+) 
+
+```
+
+
+## Analyse the Data
+
+Next, calculate descriptive statistics of your choice. First, here are the centuries that had the most languages go extinct.
+
+```{r}
+#| label: descriptive_stats 
+#| message: false
+#| warning: false
+
+ext_per_century <- dataset |> 
+  select(language, century) |>
+  group_by(century) |>
+  tally()
+
+top <- ext_per_century |> 
+  select(century, extinctions = n) |>
+  arrange(desc(extinctions))
+```
+
+These are the time periods where the highest numbers of languages went extinct.
+
+```{r}
+#| label: top_centuries
+#| message: false
+#| echo: false
+
+knitr::kable(head(top), 
+             caption = "Centuries with most language extinctions."
+             )
+```
+
+These are the regions that had the most extinctions in the 20th century. 
+
+```{r}
+#| label: regions_20th_century
+#| message: false
+#| echo: false
+
+per_region <- dataset |> 
+  filter(century == "20th") |>
+  select(language, region) |>
+  group_by(region) |>
+  tally()
+
+
+top_regions <- per_region |> 
+  select(region, extinctions = n) |>
+  arrange(desc(extinctions)) 
+
+```
+
+```{r}
+#| label: top_regions_table
+
+knitr::kable(head(top_regions), 
+             caption = "Regions with most extinctions in 20th century."
+             )
+
+```
+
+
+
+```{r}
+#| label: century_dataset
+
+# add output of "per_region" and "ext_per_century" to the "dataset"
+num_per_region <- dataset |> 
+  select(language, region) |>
+  group_by(region) |>
+  tally() |>
+  mutate(num_in_region = n)
+
+region_dataset <- num_per_region |> 
+  select(region, num_in_region)
+```
+
+
+```{r}
+
+num_per_cent <- dataset |>
+  select(language, century) |>
+  group_by(century) |>
+  tally() |> 
+  mutate(num_per_century = n)
+
+century_dataset <- num_per_cent |>
+  select(century, num_per_century) 
+# remove n column!???
+
+print(century_dataset)
+
+```
+
+```{r}
+#| label: final_dataset
+
+final_dataset <- dataset |> 
+  select(language, century, region) |>
+  inner_join(century_dataset, join_by(century)) |>
+  inner_join(region_dataset, join_by(region))
+
+```
+
+This is the average century for a language to have gone extinct. ???
+
+```{r}
+#| label: avg_extinction
+
+# help do this later GRRRR
+
+```
+
+Then, select two continuous variables and fit a model to the data (bivariate regression). 
+
+```{r}
+#| label: model
+
+mod <- lm(formula = num_per_century ~ num_in_region, data = final_dataset)
+
+summary(mod)
+
+```
+
+
+Generate a plot that includes a regression line.????????
+
+```{r}
+#| label: plot
+#| message: false
+
+ggplot(final_dataset) + 
+  geom_point(mapping = aes(x = num_per_century, y = num_in_region)) +
+  labs(title = "GOD PLEASE WORK")
+
+
+```
+
+
+## Observations 
+
+Write up some general observations of the model and plot. 
+
+?????????
+
